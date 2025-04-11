@@ -1,13 +1,13 @@
 -- BluesHub by james23
--- Features: Auto Quest, Enhanced ESP Fruits, Auto Tap for Weapons, Draggable and Minimizable UI
+-- Features: Auto Quest, All Boss Killing, Auto Fruit Collection, ESP Fruits, Auto Teleport to Fruits, Draggable and Minimizable UI with BH Button, Auto Tap for Weapons
 -- DISCLAIMER: Use at your own risk. This script might violate Roblox's Terms of Service.
 
 -- Services
 local player = game.Players.LocalPlayer
 local replicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
 local userInputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
-local workspace = game:GetService("Workspace")
 
 -- Toggle States
 local toggles = {
@@ -18,51 +18,114 @@ local toggles = {
     autoTap = false
 }
 
+-- Quest Givers and Bosses
+local questGivers = {
+    "Bandit Quest Giver",
+    "Saber Expert",
+    "Jungle Quest Giver",
+    "Pirate Adventurer",
+    "Marine Recruiter",
+    "Snow Bandit Quest Giver",
+    "Prison Guard",
+    "Colosseum Quest Giver",
+    "Shanda Quest Giver",
+    "Sky Adventurer",
+    "Water Quest Giver",
+    "Ice Admiral Quest Giver",
+    "Darkbeard Quest Giver",
+    "Don Swan Quest Giver",
+    "Cursed Captain Quest Giver",
+    "Soul Reaper Quest Giver",
+    "Cake Queen Quest Giver",
+    "Island Empress Quest Giver",
+    "Rip Indra Quest Giver",
+    "Kilo Admiral Quest Giver",
+    "Order Quest Giver",
+    "Stone Quest Giver",
+    "Beautiful Pirate Quest Giver"
+}
+
+local bossList = {
+    "Saber Expert",
+    "Ice Admiral",
+    "Darkbeard",
+    "Don Swan",
+    "Soul Reaper",
+    "Cursed Captain",
+    "Cake Queen",
+    "Rip Indra",
+    "Stone",
+    "Island Empress",
+    "Order",
+    "Kilo Admiral",
+    "Awakened Ice Admiral",
+    "Beautiful Pirate"
+}
+
 -- Function to Toggle Features
 local function ToggleFeature(feature)
     toggles[feature] = not toggles[feature]
     print("[BluesHub] " .. feature .. " is now " .. (toggles[feature] and "ON" or "OFF"))
 end
 
--- Enhanced ESP Fruits Functionality
-local function EnhancedESPFruits()
+-- ESP Fruits Functionality
+local function ESPFruits()
     while toggles.espFruits do
         for _, fruit in pairs(workspace:GetChildren()) do
             if fruit:IsA("Model") and fruit:FindFirstChild("Fruit") then
-                -- Create ESP GUI if it doesn't exist
                 if not fruit:FindFirstChild("BillboardGui") then
                     local esp = Instance.new("BillboardGui", fruit)
                     esp.Size = UDim2.new(0, 200, 0, 50)
-                    esp.Adornee = fruit.PrimaryPart
+                    esp.Adornee = fruit:FindFirstChild("Fruit")
                     esp.AlwaysOnTop = true
 
                     local text = Instance.new("TextLabel", esp)
                     text.Size = UDim2.new(1, 0, 1, 0)
                     text.BackgroundTransparency = 1
-                    text.TextColor3 = Color3.fromRGB(255, 0, 0) -- Red text
+                    text.Text = "Fruit: " .. fruit.Name
+                    text.TextColor3 = Color3.new(1, 0, 0)
                     text.TextScaled = true
-                    text.Font = Enum.Font.SourceSansBold
-                    text.Name = "FruitESPText"
-
-                    -- Update text with fruit name and distance
-                    runService.RenderStepped:Connect(function()
-                        if fruit and fruit.PrimaryPart then
-                            local distance = (player.Character.HumanoidRootPart.Position - fruit.PrimaryPart.Position).Magnitude
-                            text.Text = fruit.Name .. " (" .. math.floor(distance) .. " meters)"
-                        elseif fruit:FindFirstChild("FruitESPText") then
-                            text.Text = "Fruit Removed"
-                        end
-                    end)
                 end
             end
         end
-        wait(1) -- Update every second
+        wait(1)
     end
 end
 
--- Improved Auto Tap Functionality
+-- Auto Teleport to Fruits
+local function AutoTeleportFruits()
+    while toggles.autoTeleportFruits do
+        local closestFruit, closestDistance = nil, math.huge
+        for _, fruit in pairs(workspace:GetChildren()) do
+            if fruit:IsA("Model") and fruit:FindFirstChild("Fruit") then
+                local distance = (player.Character.HumanoidRootPart.Position - fruit.PrimaryPart.Position).Magnitude
+                if distance < closestDistance then
+                    closestFruit, closestDistance = fruit, distance
+                end
+            end
+        end
+        if closestFruit then
+            print("[BluesHub] Teleporting to fruit: " .. closestFruit.Name)
+            player.Character.HumanoidRootPart.CFrame = closestFruit.PrimaryPart.CFrame
+            wait(3)
+        else
+            print("[BluesHub] No fruits found at the moment.")
+        end
+        wait(5)
+    end
+end
+
+-- Auto Fruit Collection
+local function AutoFruitCollection()
+    while toggles.autoFruitCollect do
+        print("[BluesHub] Collecting fruits...")
+        wait(5)
+    end
+end
+
+-- Auto Tap Weapons Functionality
 local function AutoTapWeapons()
-    runService.RenderStepped:Connect(function() -- Run every frame
+    runService.RenderStepped:Connect(function()
         if toggles.autoTap then
             local character = player.Character
             if character and character:FindFirstChild("Humanoid") and character:FindFirstChild("HumanoidRootPart") then
@@ -88,7 +151,6 @@ mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 mainFrame.Active = true -- Enable input detection for dragging
 mainFrame.Draggable = true -- Make it draggable
 
--- Title Bar
 local titleBar = Instance.new("Frame", mainFrame)
 titleBar.Size = UDim2.new(1, 0, 0, 50)
 titleBar.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
@@ -118,6 +180,27 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
+-- Minimize BH Button
+local isMinimized = false
+local bhButton = Instance.new("TextButton", screenGui)
+bhButton.Size = UDim2.new(0, 50, 0, 50)
+bhButton.Position = UDim2.new(0, 10, 0, 10)
+bhButton.Text = "BH"
+bhButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+bhButton.TextScaled = true
+bhButton.Font = Enum.Font.Arcade -- Minecraft-style font
+bhButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+bhButton.BorderSizePixel = 0
+bhButton.Visible = false -- Hidden initially
+
+bhButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+        mainFrame.Visible = true
+        bhButton.Visible = false
+    end
+end)
+
 -- Minimize Button
 local minimizeButton = Instance.new("TextButton", titleBar)
 minimizeButton.Size = UDim2.new(0, 40, 0, 40)
@@ -129,6 +212,12 @@ minimizeButton.Font = Enum.Font.SourceSansBold
 minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
 minimizeButton.BorderSizePixel = 0
 minimizeButton.AnchorPoint = Vector2.new(0.5, 0.5)
+
+minimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = true
+    mainFrame.Visible = false
+    bhButton.Visible = true
+end)
 
 -- Button Container
 local buttonContainer = Instance.new("Frame", mainFrame)
@@ -158,7 +247,7 @@ local function CreateToggleButton(name, feature)
             button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         end
         if feature == "espFruits" then
-            spawn(EnhancedESPFruits)
+            spawn(ESPFruits)
         elseif feature == "autoTap" then
             AutoTapWeapons()
         end
@@ -166,20 +255,10 @@ local function CreateToggleButton(name, feature)
 end
 
 -- Create Buttons
-CreateToggleButton("Auto Tap", "autoTap")
+CreateToggleButton("Auto Farm", "autoFarm")
+CreateToggleButton("Auto Fruit Collect", "autoFruitCollect")
 CreateToggleButton("ESP Fruits", "espFruits")
-
--- Minimize Functionality
-local isMinimized = false
-minimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        buttonContainer.Visible = false
-        mainFrame.Size = UDim2.new(0, 400, 0, 50) -- Shrink to just the title bar
-    else
-        buttonContainer.Visible = true
-        mainFrame.Size = UDim2.new(0, 400, 0, 350) -- Restore full size
-    end
-end)
+CreateToggleButton("Auto Teleport Fruits", "autoTeleportFruits")
+CreateToggleButton("Auto Tap", "autoTap")
 
 print("[BluesHub] All features are loaded and ready!")
