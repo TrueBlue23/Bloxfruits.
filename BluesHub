@@ -25,13 +25,13 @@ screenGui.Name = "BluesHub"
 local mainFrame = Instance.new("Frame", screenGui)
 mainFrame.Size = UDim2.new(0, 400, 0, 350)
 mainFrame.Position = UDim2.new(0.5, -200, 0.5, -175)
-mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Blue background
+mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 50) -- Blue-black theme
 mainFrame.BorderSizePixel = 0
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 
 local titleBar = Instance.new("Frame", mainFrame)
 titleBar.Size = UDim2.new(1, 0, 0, 50)
-titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 180) -- Slightly darker blue
+titleBar.BackgroundColor3 = Color3.fromRGB(5, 5, 30) -- Dark blue-black
 titleBar.BorderSizePixel = 0
 
 local titleLabel = Instance.new("TextLabel", titleBar)
@@ -49,7 +49,7 @@ closeButton.Text = "X"
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeButton.TextScaled = true
 closeButton.Font = Enum.Font.Arcade -- Minecraft-like font
-closeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 150)
+closeButton.BackgroundColor3 = Color3.fromRGB(30, 30, 60)
 closeButton.BorderSizePixel = 0
 closeButton.AnchorPoint = Vector2.new(0.5, 0.5)
 closeButton.MouseButton1Click:Connect(function()
@@ -63,7 +63,7 @@ minimizeButton.Text = "_"
 minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 minimizeButton.TextScaled = true
 minimizeButton.Font = Enum.Font.Arcade -- Minecraft-like font
-minimizeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 150)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(30, 30, 60)
 minimizeButton.BorderSizePixel = 0
 minimizeButton.AnchorPoint = Vector2.new(0.5, 0.5)
 
@@ -83,7 +83,7 @@ ApplyRoundedCorners(titleBar)
 ApplyRoundedCorners(closeButton)
 ApplyRoundedCorners(minimizeButton)
 
--- Make UI Draggable from Any Spot
+-- Make UI Draggable
 local function MakeDraggable(frame)
     local dragging = false
     local dragInput, mousePos, framePos
@@ -129,7 +129,7 @@ local isMinimized = false
 local minimizedBlock = Instance.new("Frame", screenGui)
 minimizedBlock.Size = UDim2.new(0, 100, 0, 50)
 minimizedBlock.Position = UDim2.new(0.5, -50, 0.5, -25)
-minimizedBlock.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+minimizedBlock.BackgroundColor3 = Color3.fromRGB(10, 10, 50) -- Blue-black for minimized block
 minimizedBlock.Visible = false
 ApplyRoundedCorners(minimizedBlock)
 
@@ -165,7 +165,7 @@ local function CreateToggleButton(name, feature)
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.TextScaled = true
     button.Font = Enum.Font.Arcade -- Minecraft-like font
-    button.BackgroundColor3 = Color3.fromRGB(0, 0, 150)
+    button.BackgroundColor3 = Color3.fromRGB(20, 20, 40) -- Button background
     button.BorderSizePixel = 0
     ApplyRoundedCorners(button)
 
@@ -175,11 +175,12 @@ local function CreateToggleButton(name, feature)
         if toggles[feature] then
             button.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- Green for ON
         else
-            button.BackgroundColor3 = Color3.fromRGB(0, 0, 150) -- Blue for OFF
+            button.BackgroundColor3 = Color3.fromRGB(20, 20, 40) -- Blue-black for OFF
         end
     end)
 end
 
+-- Add Feature Buttons
 CreateToggleButton("Auto Farm", "autoFarm")
 CreateToggleButton("Auto Fruit Collect", "autoFruitCollect")
 CreateToggleButton("ESP Fruits", "espFruits")
