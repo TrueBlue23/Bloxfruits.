@@ -1,5 +1,5 @@
--- BluesHub by james23
--- Features: Auto Quest, All Boss Killing, Auto Fruit Collection, ESP Fruits, Auto Teleport to Fruits, Draggable and Minimizable UI with BH Button, Auto Tap for Weapons
+-- BluesHub Script for Blox Fruits
+-- Features: Auto Quest, All Boss Killing, Auto Fruit Collection, ESP Fruits, Auto Teleport to Fruits, RedzHub-style UI, Auto Tap for Weapons, Tween to Sky
 -- DISCLAIMER: Use at your own risk. This script might violate Roblox's Terms of Service.
 
 -- Services
@@ -7,15 +7,16 @@ local player = game.Players.LocalPlayer
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local workspace = game:GetService("Workspace")
 local userInputService = game:GetService("UserInputService")
-local runService = game:GetService("RunService")
+local tweenService = game:GetService("TweenService") -- Added for smooth movement
 
 -- Toggle States
 local toggles = {
-    autoFarm = true,
-    autoFruitCollect = true,
-    espFruits = true,
-    autoTeleportFruits = true,
-    autoTap = true
+    autoFarm = false,
+    autoFruitCollect = false,
+    espFruits = false,
+    autoTeleportFruits = false,
+    autoTap = false,
+    tweenToSky = false -- New feature for tweening to the sky
 }
 
 -- Quest Givers and Bosses
@@ -68,6 +69,101 @@ local function ToggleFeature(feature)
     print("[BluesHub] " .. feature .. " is now " .. (toggles[feature] and "ON" or "OFF"))
 end
 
+-- Function to Tween Player to Sky
+local function TweenToSky()
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        
+        -- Define the target position in the sky
+        local targetPosition = humanoidRootPart.Position + Vector3.new(0, 500, 0) -- 500 studs above the current position
+
+        -- Create the tween
+        local tweenInfo = TweenInfo.new(
+            2, -- Duration in seconds
+            Enum.EasingStyle.Quad, -- Smoothing style
+            Enum.EasingDirection.Out -- Direction of easing
+        )
+        local tweenGoal = { Position = targetPosition }
+        local tween = tweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
+        
+        -- Play the tween
+        tween:Play()
+        
+        -- Optional: Print status when completed
+        tween.Completed:Connect(function()
+            print("[BluesHub] Tween to sky completed!")
+        end)
+    else
+        print("[BluesHub] HumanoidRootPart not found!")
+    end
+end
+
+-- Function to Auto Tap Weapons
+local function AutoTapWeapons()
+    while toggles.autoTap do
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") and character:FindFirstChild("HumanoidRootPart") then
+            local tool = character:FindFirstChildOfClass("Tool") -- Get the currently equipped weapon
+            if tool and (tool.Name:match("Sword") or tool.Name:match("Gun")) then
+                replicatedStorage.Remotes.CommF_:InvokeServer("Attack", tool.Name) -- Simulate attack
+                print("[BluesHub] Attacking with: " .. tool.Name)
+            end
+        end
+        wait(0.2) -- Adjust the wait time to control the tap speed
+    end
+end
+
+-- Function to Find Quest NPC
+local function FindQuestNPC(npcName)
+    for _, npc in pairs(workspace.NPCs:GetChildren()) do
+        if npc.Name == npcName then
+            return npc
+        end
+    end
+    return nil
+end
+
+-- Function to Get a Quest
+local function GetQuest(npcName, questName)
+    local npc = FindQuestNPC(npcName)
+    if npc then
+        player.Character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame
+        wait(3) -- Simulate delay for interaction
+        replicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", questName, 1)
+        print("[BluesHub] Quest started: " .. questName)
+    else
+        print("[BluesHub] NPC not found: " .. npcName)
+    end
+end
+
+-- Function to Kill Bosses
+local function KillBoss(bossName)
+    print("[BluesHub] Searching for boss: " .. bossName)
+    local boss = workspace.Enemies:FindFirstChild(bossName)
+    while boss and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 and toggles.autoFarm do
+        player.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame
+        wait(2) -- Simulate attacking
+        replicatedStorage.Remotes.CommF_:InvokeServer("Attack", boss.Name)
+        print("[BluesHub] Attacking boss: " .. bossName)
+        wait(3)
+    end
+    if not boss then
+        print("[BluesHub] Boss defeated: " .. bossName)
+    end
+end
+
+-- Auto Farm Logic
+local function AutoFarmBosses()
+    while toggles.autoFarm do
+        for _, bossName in pairs(bossList) do
+            GetQuest("QuestGiverNPC", "BossQuest")
+            KillBoss(bossName)
+            wait(5)
+        end
+    end
+end
+
 -- ESP Fruits Functionality
 local function ESPFruits()
     while toggles.espFruits do
@@ -98,7 +194,7 @@ local function AutoTeleportFruits()
         local closestFruit, closestDistance = nil, math.huge
         for _, fruit in pairs(workspace:GetChildren()) do
             if fruit:IsA("Model") and fruit:FindFirstChild("Fruit") then
-                local distance = (player.Character.HumanoidRootPart.Position - fruit.PrimaryPart.Position).Magnitude
+                local distance = (player.Character.HumanoidRootPart.Position - fruit.Position).magnitude
                 if distance < closestDistance then
                     closestFruit, closestDistance = fruit, distance
                 end
@@ -123,21 +219,6 @@ local function AutoFruitCollection()
     end
 end
 
--- Auto Tap Weapons Functionality
-local function AutoTapWeapons()
-    runService.RenderStepped:Connect(function()
-        if toggles.autoTap then
-            local character = player.Character
-            if character and character:FindFirstChild("Humanoid") and character:FindFirstChild("HumanoidRootPart") then
-                local tool = character:FindFirstChildOfClass("Tool") -- Get the currently equipped tool
-                if tool and (tool.ToolTip:match("Melee") or tool.ToolTip:match("Sword") or tool.ToolTip:match("Gun") or tool.ToolTip:match("Fruit")) then
-                    replicatedStorage.Remotes.CommF_:InvokeServer("Attack", tool.Name) -- Simulate attack
-                end
-            end
-        end
-    end)
-end
-
 -- Create UI
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
 screenGui.Name = "BluesHub"
@@ -148,8 +229,6 @@ mainFrame.Position = UDim2.new(0.5, -200, 0.5, -175)
 mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 mainFrame.BorderSizePixel = 0
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.Active = true -- Enable input detection for dragging
-mainFrame.Draggable = true -- Make it draggable
 
 local titleBar = Instance.new("Frame", mainFrame)
 titleBar.Size = UDim2.new(1, 0, 0, 50)
@@ -157,15 +236,13 @@ titleBar.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
 titleBar.BorderSizePixel = 0
 
 local titleLabel = Instance.new("TextLabel", titleBar)
-titleLabel.Size = UDim2.new(1, -50, 1, 0)
-titleLabel.Position = UDim2.new(0, 10, 0, 0)
+titleLabel.Size = UDim2.new(1, 0, 1, 0)
 titleLabel.Text = "BluesHub"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.SourceSansBold
 titleLabel.BackgroundTransparency = 1
 
--- Close Button
 local closeButton = Instance.new("TextButton", titleBar)
 closeButton.Size = UDim2.new(0, 40, 0, 40)
 closeButton.Position = UDim2.new(1, -45, 0.5, -20)
@@ -180,85 +257,13 @@ closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
--- Minimize BH Button
-local isMinimized = false
-local bhButton = Instance.new("TextButton", screenGui)
-bhButton.Size = UDim2.new(0, 50, 0, 50)
-bhButton.Position = UDim2.new(0, 10, 0, 10)
-bhButton.Text = "BH"
-bhButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-bhButton.TextScaled = true
-bhButton.Font = Enum.Font.Arcade -- Minecraft-style font
-bhButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-bhButton.BorderSizePixel = 0
-bhButton.Visible = false -- Hidden initially
-
-bhButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-        mainFrame.Visible = true
-        bhButton.Visible = false
-    end
-end)
-
--- Minimize Button
-local minimizeButton = Instance.new("TextButton", titleBar)
-minimizeButton.Size = UDim2.new(0, 40, 0, 40)
-minimizeButton.Position = UDim2.new(1, -90, 0.5, -20)
-minimizeButton.Text = "-"
-minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-minimizeButton.TextScaled = true
-minimizeButton.Font = Enum.Font.SourceSansBold
-minimizeButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
-minimizeButton.BorderSizePixel = 0
-minimizeButton.AnchorPoint = Vector2.new(0.5, 0.5)
-
-minimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = true
-    mainFrame.Visible = false
-    bhButton.Visible = true
-end)
-
--- Button Container
 local buttonContainer = Instance.new("Frame", mainFrame)
 buttonContainer.Size = UDim2.new(1, -20, 1, -70)
 buttonContainer.Position = UDim2.new(0, 10, 0, 60)
 buttonContainer.BackgroundTransparency = 1
 
--- Function to Create Toggle Buttons
 local function CreateToggleButton(name, feature)
     local button = Instance.new("TextButton", buttonContainer)
     button.Size = UDim2.new(1, -20, 0, 40)
-    button.Position = UDim2.new(0.5, 0, 0, (#buttonContainer:GetChildren() - 1) * 50)
-    button.AnchorPoint = Vector2.new(0.5, 0)
-    button.Text = name .. ": OFF"
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextScaled = true
-    button.Font = Enum.Font.SourceSansBold
-    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    button.BorderSizePixel = 0
-
-    button.MouseButton1Click:Connect(function()
-        ToggleFeature(feature)
-        button.Text = name .. ": " .. (toggles[feature] and "ON" or "OFF")
-        if toggles[feature] then
-            button.BackgroundColor3 = Color3.fromRGB(30, 200, 30)
-        else
-            button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        end
-        if feature == "espFruits" then
-            spawn(ESPFruits)
-        elseif feature == "autoTap" then
-            AutoTapWeapons()
-        end
-    end)
-end
-
--- Create Buttons
-CreateToggleButton("Auto Farm", "autoFarm")
-CreateToggleButton("Auto Fruit Collect", "autoFruitCollect")
-CreateToggleButton("ESP Fruits", "espFruits")
-CreateToggleButton("Auto Teleport Fruits", "autoTeleportFruits")
-CreateToggleButton("Auto Tap", "autoTap")
-
-print("[BluesHub] All features are loaded and ready!")
+    button.Position = UDim2.new(0.5, 0, 0, (#buttonContainer_
+
