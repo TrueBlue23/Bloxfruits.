@@ -83,7 +83,7 @@ ApplyRoundedCorners(titleBar)
 ApplyRoundedCorners(closeButton)
 ApplyRoundedCorners(minimizeButton)
 
--- Make UI Draggable
+-- Make UI Draggable from Any Spot
 local function MakeDraggable(frame)
     local dragging = false
     local dragInput, mousePos, framePos
