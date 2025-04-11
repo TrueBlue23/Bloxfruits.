@@ -7,6 +7,7 @@ local player = game.Players.LocalPlayer
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local workspace = game:GetService("Workspace")
 local userInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 -- Toggle States
 local toggles = {
@@ -17,198 +18,28 @@ local toggles = {
     autoTap = false
 }
 
--- Quest Givers and Bosses
-local questGivers = {
-    "Bandit Quest Giver",
-    "Saber Expert",
-    "Jungle Quest Giver",
-    "Pirate Adventurer",
-    "Marine Recruiter",
-    "Snow Bandit Quest Giver",
-    "Prison Guard",
-    "Colosseum Quest Giver",
-    "Shanda Quest Giver",
-    "Sky Adventurer",
-    "Water Quest Giver",
-    "Ice Admiral Quest Giver",
-    "Darkbeard Quest Giver",
-    "Don Swan Quest Giver",
-    "Cursed Captain Quest Giver",
-    "Soul Reaper Quest Giver",
-    "Cake Queen Quest Giver",
-    "Island Empress Quest Giver",
-    "Rip Indra Quest Giver",
-    "Kilo Admiral Quest Giver",
-    "Order Quest Giver",
-    "Stone Quest Giver",
-    "Beautiful Pirate Quest Giver"
-}
-
-local bossList = {
-    "Saber Expert",
-    "Ice Admiral",
-    "Darkbeard",
-    "Don Swan",
-    "Soul Reaper",
-    "Cursed Captain",
-    "Cake Queen",
-    "Rip Indra",
-    "Stone",
-    "Island Empress",
-    "Order",
-    "Kilo Admiral",
-    "Awakened Ice Admiral",
-    "Beautiful Pirate"
-}
-
--- Function to Toggle Features
-local function ToggleFeature(feature)
-    toggles[feature] = not toggles[feature]
-    print("[BluesHub] " .. feature .. " is now " .. (toggles[feature] and "ON" or "OFF"))
-end
-
--- Function to Auto Tap Weapons
-local function AutoTapWeapons()
-    while toggles.autoTap do
-        local character = player.Character
-        if character and character:FindFirstChild("Humanoid") and character:FindFirstChild("HumanoidRootPart") then
-            local tool = character:FindFirstChildOfClass("Tool") -- Get the currently equipped weapon
-            if tool and (tool.Name:match("Sword") or tool.Name:match("Gun")) then
-                replicatedStorage.Remotes.CommF_:InvokeServer("Attack", tool.Name) -- Simulate attack
-                print("[BluesHub] Attacking with: " .. tool.Name)
-            end
-        end
-        wait(0.2) -- Adjust the wait time to control the tap speed
-    end
-end
-
--- Function to Find Quest NPC
-local function FindQuestNPC(npcName)
-    for _, npc in pairs(workspace.NPCs:GetChildren()) do
-        if npc.Name == npcName then
-            return npc
-        end
-    end
-    return nil
-end
-
--- Function to Get a Quest
-local function GetQuest(npcName, questName)
-    local npc = FindQuestNPC(npcName)
-    if npc then
-        player.Character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame
-        wait(3) -- Simulate delay for interaction
-        replicatedStorage.Remotes.CommF_:InvokeServer("StartQuest", questName, 1)
-        print("[BluesHub] Quest started: " .. questName)
-    else
-        print("[BluesHub] NPC not found: " .. npcName)
-    end
-end
-
--- Function to Kill Bosses
-local function KillBoss(bossName)
-    print("[BluesHub] Searching for boss: " .. bossName)
-    local boss = workspace.Enemies:FindFirstChild(bossName)
-    while boss and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 and toggles.autoFarm do
-        player.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame
-        wait(2) -- Simulate attacking
-        replicatedStorage.Remotes.CommF_:InvokeServer("Attack", boss.Name)
-        print("[BluesHub] Attacking boss: " .. bossName)
-        wait(3)
-    end
-    if not boss then
-        print("[BluesHub] Boss defeated: " .. bossName)
-    end
-end
-
--- Auto Farm Logic
-local function AutoFarmBosses()
-    while toggles.autoFarm do
-        for _, bossName in pairs(bossList) do
-            GetQuest("QuestGiverNPC", "BossQuest")
-            KillBoss(bossName)
-            wait(5)
-        end
-    end
-end
-
--- ESP Fruits Functionality
-local function ESPFruits()
-    while toggles.espFruits do
-        for _, fruit in pairs(workspace:GetChildren()) do
-            if fruit:IsA("Model") and fruit:FindFirstChild("Fruit") then
-                if not fruit:FindFirstChild("BillboardGui") then
-                    local esp = Instance.new("BillboardGui", fruit)
-                    esp.Size = UDim2.new(0, 200, 0, 50)
-                    esp.Adornee = fruit:FindFirstChild("Fruit")
-                    esp.AlwaysOnTop = true
-
-                    local text = Instance.new("TextLabel", esp)
-                    text.Size = UDim2.new(1, 0, 1, 0)
-                    text.BackgroundTransparency = 1
-                    text.Text = "Fruit: " .. fruit.Name
-                    text.TextColor3 = Color3.new(1, 0, 0)
-                    text.TextScaled = true
-                end
-            end
-        end
-        wait(1)
-    end
-end
-
--- Auto Teleport to Fruits
-local function AutoTeleportFruits()
-    while toggles.autoTeleportFruits do
-        local closestFruit, closestDistance = nil, math.huge
-        for _, fruit in pairs(workspace:GetChildren()) do
-            if fruit:IsA("Model") and fruit:FindFirstChild("Fruit") then
-                local distance = (player.Character.HumanoidRootPart.Position - fruit.Position).magnitude
-                if distance < closestDistance then
-                    closestFruit, closestDistance = fruit, distance
-                end
-            end
-        end
-        if closestFruit then
-            print("[BluesHub] Teleporting to fruit: " .. closestFruit.Name)
-            player.Character.HumanoidRootPart.CFrame = closestFruit.PrimaryPart.CFrame
-            wait(3)
-        else
-            print("[BluesHub] No fruits found at the moment.")
-        end
-        wait(5)
-    end
-end
-
--- Auto Fruit Collection
-local function AutoFruitCollection()
-    while toggles.autoFruitCollect do
-        print("[BluesHub] Collecting fruits...")
-        wait(5)
-    end
-end
-
--- Create UI
+-- UI Components
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
 screenGui.Name = "BluesHub"
 
 local mainFrame = Instance.new("Frame", screenGui)
 mainFrame.Size = UDim2.new(0, 400, 0, 350)
 mainFrame.Position = UDim2.new(0.5, -200, 0.5, -175)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Blue background
 mainFrame.BorderSizePixel = 0
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 
 local titleBar = Instance.new("Frame", mainFrame)
 titleBar.Size = UDim2.new(1, 0, 0, 50)
-titleBar.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
+titleBar.BackgroundColor3 = Color3.fromRGB(0, 0, 180) -- Slightly darker blue
 titleBar.BorderSizePixel = 0
 
 local titleLabel = Instance.new("TextLabel", titleBar)
 titleLabel.Size = UDim2.new(1, 0, 1, 0)
 titleLabel.Text = "BluesHub"
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
 titleLabel.TextScaled = true
-titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Font = Enum.Font.Arcade -- Minecraft-like font
 titleLabel.BackgroundTransparency = 1
 
 local closeButton = Instance.new("TextButton", titleBar)
@@ -217,19 +48,114 @@ closeButton.Position = UDim2.new(1, -45, 0.5, -20)
 closeButton.Text = "X"
 closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 closeButton.TextScaled = true
-closeButton.Font = Enum.Font.SourceSansBold
-closeButton.BackgroundColor3 = Color3.fromRGB(200, 30, 30)
+closeButton.Font = Enum.Font.Arcade -- Minecraft-like font
+closeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 150)
 closeButton.BorderSizePixel = 0
 closeButton.AnchorPoint = Vector2.new(0.5, 0.5)
 closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy()
 end)
 
+local minimizeButton = Instance.new("TextButton", titleBar)
+minimizeButton.Size = UDim2.new(0, 40, 0, 40)
+minimizeButton.Position = UDim2.new(1, -90, 0.5, -20)
+minimizeButton.Text = "_"
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.TextScaled = true
+minimizeButton.Font = Enum.Font.Arcade -- Minecraft-like font
+minimizeButton.BackgroundColor3 = Color3.fromRGB(0, 0, 150)
+minimizeButton.BorderSizePixel = 0
+minimizeButton.AnchorPoint = Vector2.new(0.5, 0.5)
+
 local buttonContainer = Instance.new("Frame", mainFrame)
 buttonContainer.Size = UDim2.new(1, -20, 1, -70)
 buttonContainer.Position = UDim2.new(0, 10, 0, 60)
 buttonContainer.BackgroundTransparency = 1
 
+-- Rounded Corners
+local function ApplyRoundedCorners(frame)
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 20) -- Adjust corner radius
+end
+
+ApplyRoundedCorners(mainFrame)
+ApplyRoundedCorners(titleBar)
+ApplyRoundedCorners(closeButton)
+ApplyRoundedCorners(minimizeButton)
+
+-- Make UI Draggable
+local function MakeDraggable(frame)
+    local dragging = false
+    local dragInput, mousePos, framePos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            mousePos = input.Position
+            framePos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - mousePos
+            frame.Position = UDim2.new(
+                framePos.X.Scale,
+                framePos.X.Offset + delta.X,
+                framePos.Y.Scale,
+                framePos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+MakeDraggable(mainFrame)
+
+-- Minimized State
+local isMinimized = false
+
+local minimizedBlock = Instance.new("Frame", screenGui)
+minimizedBlock.Size = UDim2.new(0, 100, 0, 50)
+minimizedBlock.Position = UDim2.new(0.5, -50, 0.5, -25)
+minimizedBlock.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+minimizedBlock.Visible = false
+ApplyRoundedCorners(minimizedBlock)
+
+local bhLabel = Instance.new("TextLabel", minimizedBlock)
+bhLabel.Size = UDim2.new(1, 0, 1, 0)
+bhLabel.Text = "BH"
+bhLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+bhLabel.TextScaled = true
+bhLabel.Font = Enum.Font.Arcade -- Minecraft-like font
+bhLabel.BackgroundTransparency = 1
+
+minimizeButton.MouseButton1Click:Connect(function()
+    if isMinimized then
+        mainFrame.Visible = true
+        minimizedBlock.Visible = false
+        isMinimized = false
+    else
+        mainFrame.Visible = false
+        minimizedBlock.Visible = true
+        isMinimized = true
+    end
+end)
+
+MakeDraggable(minimizedBlock)
+
+-- Create Buttons
 local function CreateToggleButton(name, feature)
     local button = Instance.new("TextButton", buttonContainer)
     button.Size = UDim2.new(1, -20, 0, 40)
@@ -238,33 +164,26 @@ local function CreateToggleButton(name, feature)
     button.Text = name .. ": OFF"
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.TextScaled = true
-    button.Font = Enum.Font.SourceSansBold
-    button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    button.Font = Enum.Font.Arcade -- Minecraft-like font
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 150)
     button.BorderSizePixel = 0
+    ApplyRoundedCorners(button)
 
     button.MouseButton1Click:Connect(function()
-        ToggleFeature(feature)
+        toggles[feature] = not toggles[feature]
         button.Text = name .. ": " .. (toggles[feature] and "ON" or "OFF")
         if toggles[feature] then
-            button.BackgroundColor3 = Color3.fromRGB(30, 200, 30)
+            button.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- Green for ON
         else
-            button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            button.BackgroundColor3 = Color3.fromRGB(0, 0, 150) -- Blue for OFF
         end
     end)
 end
 
--- Create Buttons
 CreateToggleButton("Auto Farm", "autoFarm")
 CreateToggleButton("Auto Fruit Collect", "autoFruitCollect")
 CreateToggleButton("ESP Fruits", "espFruits")
 CreateToggleButton("Auto Teleport Fruits", "autoTeleportFruits")
 CreateToggleButton("Auto Tap", "autoTap")
 
--- Spawn Feature Threads
-spawn(AutoFarmBosses)
-spawn(AutoFruitCollection)
-spawn(ESPFruits)
-spawn(AutoTeleportFruits)
-spawn(AutoTapWeapons)
-
-print("[BluesHub] All features are loaded and ready!")
+print("[BluesHub] UI Loaded Successfully!")
