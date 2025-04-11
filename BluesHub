@@ -125,68 +125,11 @@ end
 -- Apply draggable behavior to the mainFrame with minimizeButton as exception
 MakeDraggable(mainFrame, minimizeButton)
 
--- Minimized State
-local isMinimized = false
+-- Additional scripts can be added below:
+--[[
+Insert other scripts or features here, ensuring they do not conflict with existing variables or functionality.
+For example, add auto-farm, auto-collect logic, or other features as separate functions or modules.
+]]--
 
-local minimizedBlock = Instance.new("Frame", screenGui)
-minimizedBlock.Size = UDim2.new(0, 100, 0, 50)
-minimizedBlock.Position = UDim2.new(0.5, -50, 0.5, -25)
-minimizedBlock.BackgroundColor3 = Color3.fromRGB(10, 10, 50) -- Blue-black for minimized block
-minimizedBlock.Visible = false
-ApplyRoundedCorners(minimizedBlock)
-
-local bhLabel = Instance.new("TextLabel", minimizedBlock)
-bhLabel.Size = UDim2.new(1, 0, 1, 0)
-bhLabel.Text = "BH"
-bhLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-bhLabel.TextScaled = true
-bhLabel.Font = Enum.Font.Arcade -- Minecraft-like font
-bhLabel.BackgroundTransparency = 1
-
-minimizeButton.MouseButton1Click:Connect(function()
-    if isMinimized then
-        mainFrame.Visible = true
-        minimizedBlock.Visible = false
-        isMinimized = false
-    else
-        mainFrame.Visible = false
-        minimizedBlock.Visible = true
-        isMinimized = true
-    end
-end)
-
-MakeDraggable(minimizedBlock)
-
--- Create Buttons
-local function CreateToggleButton(name, feature)
-    local button = Instance.new("TextButton", buttonContainer)
-    button.Size = UDim2.new(1, -20, 0, 40)
-    button.Position = UDim2.new(0.5, 0, 0, (#buttonContainer:GetChildren() - 1) * 50)
-    button.AnchorPoint = Vector2.new(0.5, 0)
-    button.Text = name .. ": OFF"
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextScaled = true
-    button.Font = Enum.Font.Arcade -- Minecraft-like font
-    button.BackgroundColor3 = Color3.fromRGB(20, 20, 40) -- Button background
-    button.BorderSizePixel = 0
-    ApplyRoundedCorners(button)
-
-    button.MouseButton1Click:Connect(function()
-        toggles[feature] = not toggles[feature]
-        button.Text = name .. ": " .. (toggles[feature] and "ON" or "OFF")
-        if toggles[feature] then
-            button.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- Green for ON
-        else
-            button.BackgroundColor3 = Color3.fromRGB(20, 20, 40) -- Blue-black for OFF
-        end
-    end)
-end
-
--- Add Feature Buttons
-CreateToggleButton("Auto Farm", "autoFarm")
-CreateToggleButton("Auto Fruit Collect", "autoFruitCollect")
-CreateToggleButton("ESP Fruits", "espFruits")
-CreateToggleButton("Auto Teleport Fruits", "autoTeleportFruits")
-CreateToggleButton("Auto Tap", "autoTap")
-
-print("[BluesHub] UI Loaded Successfully!")
+-- Final Output
+print("[BluesHub] Combined script loaded successfully!")
