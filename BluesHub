@@ -11,11 +11,11 @@ local runService = game:GetService("RunService")
 
 -- Toggle States
 local toggles = {
-    autoFarm = false,
-    autoFruitCollect = false,
-    espFruits = false,
-    autoTeleportFruits = false,
-    autoTap = false
+    autoFarm = true,
+    autoFruitCollect = true,
+    espFruits = true,
+    autoTeleportFruits = true,
+    autoTap = true
 }
 
 -- Quest Givers and Bosses
