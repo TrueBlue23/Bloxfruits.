@@ -83,13 +83,14 @@ ApplyRoundedCorners(titleBar)
 ApplyRoundedCorners(closeButton)
 ApplyRoundedCorners(minimizeButton)
 
--- Make UI Draggable
-local function MakeDraggable(frame)
+-- Make UI Draggable with exception handling
+local function MakeDraggable(frame, exception)
     local dragging = false
     local dragInput, mousePos, framePos
 
     frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        -- Check if the input is not on the exception
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and (not exception or not exception:IsDescendantOf(input.Target)) then
             dragging = true
             mousePos = input.Position
             framePos = frame.Position
@@ -121,7 +122,8 @@ local function MakeDraggable(frame)
     end)
 end
 
-MakeDraggable(mainFrame)
+-- Apply draggable behavior to the mainFrame with minimizeButton as exception
+MakeDraggable(mainFrame, minimizeButton)
 
 -- Minimized State
 local isMinimized = false
